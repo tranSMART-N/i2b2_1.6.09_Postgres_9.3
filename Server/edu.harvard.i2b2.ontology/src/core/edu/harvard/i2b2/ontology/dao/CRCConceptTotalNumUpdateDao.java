@@ -31,6 +31,7 @@ import edu.harvard.i2b2.ontology.delegate.crc.CallCRCUtil;
 import edu.harvard.i2b2.ontology.ejb.DBInfoType;
 import edu.harvard.i2b2.ontology.ejb.TableAccessType;
 import edu.harvard.i2b2.ontology.util.OntologyUtil;
+import edu.harvard.i2b2.ontology.util.StringUtil;
 
 public class CRCConceptTotalNumUpdateDao extends JdbcDaoSupport {
 
@@ -105,7 +106,7 @@ public class CRCConceptTotalNumUpdateDao extends JdbcDaoSupport {
 				log.debug("Executing sql [" + updateStmtStr + "] c_fullname [" + tableAccessType.getFullName() + " ]");
 				if (synchronizeAllFlag) {
 					pStmt = conn.prepareStatement(updateStmtStr);
-					pStmt.setString(1, tableAccessType.getFullName() + "%");
+					pStmt.setString(1, StringUtil.escapeBackslash(tableAccessType.getFullName(), dbInfo.getDb_serverType()) + "%");
 					pStmt.executeUpdate();
 					pStmt.close();
 				}
@@ -118,7 +119,7 @@ public class CRCConceptTotalNumUpdateDao extends JdbcDaoSupport {
 				}
 				
 				pStmt = conn.prepareStatement(selectStmt);
-				pStmt.setString(1, tableAccessType.getFullName() + "%");
+				pStmt.setString(1, StringUtil.escapeBackslash(tableAccessType.getFullName(), dbInfo.getDb_serverType()) + "%");
 				 resultSet = pStmt.executeQuery();
 				 resultSet.next();
 				 totalRecordToUpdate += resultSet.getInt(1);
@@ -142,8 +143,8 @@ public class CRCConceptTotalNumUpdateDao extends JdbcDaoSupport {
 				}
 				selectStmt += " order by c_fullname";
 				pStmt = conn.prepareStatement(selectStmt);
-				pStmt.setString(1, tableAccessType.getFullName() + "%");
-				 resultSet = pStmt.executeQuery();
+				pStmt.setString(1, StringUtil.escapeBackslash(tableAccessType.getFullName(), dbInfo.getDb_serverType()) + "%");
+				resultSet = pStmt.executeQuery();
 				 
 				 updatePStmt = conn.prepareStatement("update "+ metadataSchema + tableAccessType.getTableName().trim() +" set c_totalnum = ? where c_fullname = ? ");
 					CallCRCUtil crcUtil = new CallCRCUtil(

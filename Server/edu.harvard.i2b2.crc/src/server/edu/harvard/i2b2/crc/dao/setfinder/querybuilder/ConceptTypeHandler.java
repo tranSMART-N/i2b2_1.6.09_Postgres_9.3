@@ -12,7 +12,7 @@ public class ConceptTypeHandler {
 		this.queryXML = queryXML;
 	}
 
-	public ConceptType getConceptType(String itemKey, String dbType)
+	public ConceptType getConceptType(String itemKey)
 			throws ConceptNotFoundException, OntologyException {
 
 		ConceptType conceptType = null;
@@ -47,7 +47,7 @@ public class ConceptTypeHandler {
 		} else {
 			ItemMetaDataHandler metadataHandler = new ItemMetaDataHandler(
 					queryXML);
-			conceptType = metadataHandler.getMetaDataFromOntologyCell(itemKey, dbType);
+			conceptType = metadataHandler.getMetaDataFromOntologyCell(itemKey);
 
 		}
 		return conceptType;

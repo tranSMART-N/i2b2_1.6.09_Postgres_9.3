@@ -14,6 +14,7 @@ import edu.harvard.i2b2.common.exception.I2B2DAOException;
 import edu.harvard.i2b2.common.util.db.JDBCUtil;
 import edu.harvard.i2b2.crc.dao.CRCDAO;
 import edu.harvard.i2b2.crc.dao.DAOFactoryHelper;
+import edu.harvard.i2b2.crc.dao.pdo.input.FactRelatedQueryHandler;
 import edu.harvard.i2b2.crc.dao.pdo.input.IFactRelatedQueryHandler;
 import edu.harvard.i2b2.crc.dao.pdo.input.IInputOptionListHandler;
 import edu.harvard.i2b2.crc.dao.pdo.input.SQLServerFactRelatedQueryHandler;
@@ -50,6 +51,10 @@ public class PageTotalDao extends CRCDAO implements IPageDao {
 				// sqlserverLoadTempTable(conn, inputOptionListHandler);
 			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.ORACLE)
+					&& inputOptionListHandler.isEnumerationSet()) {
+				inputOptionListHandler.uploadEnumerationValueToTempTable(conn);
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)
 					&& inputOptionListHandler.isEnumerationSet()) {
 				inputOptionListHandler.uploadEnumerationValueToTempTable(conn);
 			}
@@ -116,6 +121,11 @@ public class PageTotalDao extends CRCDAO implements IPageDao {
 					&& inputOptionListHandler.isEnumerationSet()) {
 				// oracleLoadTempTable(conn, inputOptionListHandler);
 				inputOptionListHandler.uploadEnumerationValueToTempTable(conn);
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)
+					&& inputOptionListHandler.isEnumerationSet()) {
+				// oracleLoadTempTable(conn, inputOptionListHandler);
+				inputOptionListHandler.uploadEnumerationValueToTempTable(conn);
 			}
 
 			boolean firstTimeFlag = true;
@@ -141,6 +151,12 @@ public class PageTotalDao extends CRCDAO implements IPageDao {
 		} finally {
 			if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
+				deleteTempTable(conn);
+				if (inputOptionListHandler.isEnumerationSet()) {
+					deleteTemp1Table(conn);
+				}
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
 				deleteTempTable(conn);
 				if (inputOptionListHandler.isEnumerationSet()) {
 					deleteTemp1Table(conn);
@@ -259,16 +275,33 @@ public class PageTotalDao extends CRCDAO implements IPageDao {
 	}
 
 	private void deleteTempTable(Connection conn) {
-
+		
+		// smuniraju: Extended to include POSTGRES 
+		String tempTableName = "";
+		if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.SQLSERVER)) {
+			tempTableName = SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+		} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.POSTGRES)) {
+			tempTableName = FactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+		}
+		
 		Statement deleteStmt = null;
 		try {
 			deleteStmt = conn.createStatement();
-
+			
+			// smuniraju: Extended to include POSTGRES 
+			// conn
+			// .createStatement()
+			// .executeUpdate(
+			// 		"drop table "
+			// 				+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
+			
 			conn
 					.createStatement()
 					.executeUpdate(
 							"drop table "
-									+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
+									+ tempTableName);
 		} catch (SQLException sqle) {
 			;
 		} finally {
@@ -283,15 +316,31 @@ public class PageTotalDao extends CRCDAO implements IPageDao {
 	}
 
 	private void deleteTemp1Table(Connection conn) {
-
+		// smuniraju: Extended to include POSTGRES
+		String tempTableName = "";
+		if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.SQLSERVER)) {
+			tempTableName = SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+		} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.POSTGRES)) {
+			tempTableName = FactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+		}
+		
 		Statement deleteStmt = null;
 		try {
 			deleteStmt = conn.createStatement();
+			
+			// smuniraju: Extended to include POSTGRES 
+			// conn
+			// .createStatement()
+			// .executeUpdate(
+			// 		"drop table "
+			// 				+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
 			conn
 					.createStatement()
 					.executeUpdate(
 							"drop table "
-									+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
+									+ tempTableName);
 		} catch (SQLException sqle) {
 			;
 		} finally {

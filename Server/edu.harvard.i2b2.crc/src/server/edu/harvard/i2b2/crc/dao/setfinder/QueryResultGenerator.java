@@ -159,7 +159,12 @@ public class QueryResultGenerator extends CRCDAO implements IResultGenerator {
 				+ dimCode + ")";
 				 
 				stmt = sfConn.prepareStatement(itemCountSql);
-				stmt.setQueryTimeout(transactionTimeout);
+				
+				// // smuniraju: Currently, in postgres, a timeout value > 0 will result in "setQueryTimeout is not yet implemented"
+				// stmt.setQueryTimeout(transactionTimeout);
+				int queryTimeout = (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) ? 0 : transactionTimeout;
+				stmt.setQueryTimeout(queryTimeout);
+				
 				log.debug("Executing count sql [" + itemCountSql + "]");
 				
 				//

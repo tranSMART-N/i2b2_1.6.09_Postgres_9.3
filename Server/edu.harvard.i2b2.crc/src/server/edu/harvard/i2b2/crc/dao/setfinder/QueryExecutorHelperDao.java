@@ -146,7 +146,8 @@ public class QueryExecutorHelperDao extends CRCDAO {
 			TEMP_DX_TABLE = getDbSchemaName() + "#DX";
 			TEMP_MASTER_TABLE = getDbSchemaName() + "#MASTER_GLOBAL_TEMP_TABLE";
 		} else if (dsLookup.getServerType().equalsIgnoreCase(
-				DAOFactoryHelper.ORACLE)) {
+				DAOFactoryHelper.ORACLE) || dsLookup.getServerType().equalsIgnoreCase(
+						DAOFactoryHelper.POSTGRES)) {
 			TEMP_TABLE = getDbSchemaName() + "QUERY_GLOBAL_TEMP";
 			TEMP_DX_TABLE = getDbSchemaName() + "DX";
 			TEMP_MASTER_TABLE = getDbSchemaName() + "MASTER_QUERY_GLOBAL_TEMP";
@@ -167,8 +168,48 @@ public class QueryExecutorHelperDao extends CRCDAO {
 			// QueryProcessorUtil.getInstance().getConnection();
 			stmt = manualConnection.createStatement();
 			int count = 0;
-
 			if (dsLookup.getServerType().equalsIgnoreCase(
+							DAOFactoryHelper.POSTGRES)) {
+				String checkDeleteGlobalTempTable = "drop table " + TEMP_TABLE;
+				String checkDeleteCountTable = "drop table " + TEMP_DX_TABLE;
+				String checkDeleteMasterTable = "drop table " + TEMP_MASTER_TABLE;
+				Statement clearTempStmt = manualConnection.createStatement();
+				try {
+					clearTempStmt.executeUpdate(checkDeleteGlobalTempTable);
+				} catch (SQLException dEx) {
+					;
+				}
+				try {
+					clearTempStmt.executeUpdate(checkDeleteCountTable);
+				} catch (SQLException dEx) {
+					;
+				}
+				try {
+					clearTempStmt.executeUpdate(checkDeleteMasterTable);
+				} catch (SQLException dEx) {
+					;
+				}
+				clearTempStmt.close();
+
+				String createSql = "CREATE TEMPORARY TABLE " + TEMP_TABLE + " ( "
+						+ " ENCOUNTER_NUM int, " + " PATIENT_NUM int, INSTANCE_NUM int,"
+						+ " PANEL_COUNT int, " + " fact_count int, "
+						+ " fact_panels int " + " )";
+
+				stmt.executeUpdate(createSql);
+				createSql = " CREATE TEMPORARY TABLE " + TEMP_DX_TABLE + "  ( "
+						+ " ENCOUNTER_NUM int, " + " PATIENT_NUM int, INSTANCE_NUM int " + " ) ";
+				stmt.executeUpdate(createSql);
+				createSql = " CREATE TEMPORARY TABLE " + TEMP_MASTER_TABLE + "  ( "
+				+ " ENCOUNTER_NUM int,  PATIENT_NUM int , INSTANCE_NUM int, MASTER_ID varchar(50), LEVEL_NO int ) ";
+				stmt.executeUpdate(createSql);
+		
+				String indexSql = "create index tempIndex on "
+							+ this.getDbSchemaName()
+							+ TEMP_TABLE + " (patient_num,panel_count)";
+				log.debug("Executing sql [ " + indexSql + " ]");
+				stmt.executeUpdate(indexSql);
+			} else if (dsLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
 				String checkDeleteGlobalTempTable = "drop table " + TEMP_TABLE;
 				String checkDeleteCountTable = "drop table " + TEMP_DX_TABLE;
@@ -233,7 +274,11 @@ public class QueryExecutorHelperDao extends CRCDAO {
 
 			}
 			// set transaction timeout
-			stmt.setQueryTimeout(transactionTimeout);
+			// smuniraju: Currently, in postgres, a timeout value > 0 will result in "setQueryTimeout is not yet implemented"
+			// stmt.setQueryTimeout(transactionTimeout);
+			int queryTimeout = (dsLookup.getServerType().equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) ? 0 : transactionTimeout;
+			stmt.setQueryTimeout(queryTimeout);
+			
 			// start seperate thread to cancel the running sql if the
 			// stmt.setQueryTimeout did not work
 			CancelStatementRunner csr = new CancelStatementRunner(stmt,
@@ -347,7 +392,8 @@ public class QueryExecutorHelperDao extends CRCDAO {
 			String deleteCountTable = "", deleteMasterTable = "";
 			
 			if (dsLookup.getServerType().equalsIgnoreCase(
-					DAOFactoryHelper.SQLSERVER)) {
+					DAOFactoryHelper.SQLSERVER)|| dsLookup.getServerType().equalsIgnoreCase(
+							DAOFactoryHelper.POSTGRES)) {
 				deleteGlobalTempTable = "drop table " + TEMP_TABLE;
 				deleteCountTable = "drop table " + TEMP_DX_TABLE;
 				deleteMasterTable = "drop table " + TEMP_MASTER_TABLE;

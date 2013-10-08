@@ -17,6 +17,7 @@ public class DataSourceLookupDAOFactory {
 
 	public static final String ORACLE = "ORACLE";
 	public static final String SQLSERVER = "SQLSERVER";
+	public static final String POSTGRES = "POSTGRES";
 
 	private static String dataSourceName = null;
 	private static String serverType = null;
@@ -28,9 +29,11 @@ public class DataSourceLookupDAOFactory {
 	public static DataSourceLookupDAO getDataSourceLookupDAO()
 			throws I2B2DAOException {
 		if (serverType == null) { 
-		getLookupDataSourceFromPropertyFile();
+		    getLookupDataSourceFromPropertyFile();
 		}
-		if (serverType.equalsIgnoreCase(ORACLE)) {
+		if (serverType.equalsIgnoreCase(POSTGRES)) {
+			return new OracleDataSourceLookupDAO(lookupDataSource, schemaName);
+		} else if (serverType.equalsIgnoreCase(ORACLE)) {
 			return new OracleDataSourceLookupDAO(lookupDataSource, schemaName);
 		} else if (serverType.equalsIgnoreCase(SQLSERVER)) {
 			return new OracleDataSourceLookupDAO(lookupDataSource,

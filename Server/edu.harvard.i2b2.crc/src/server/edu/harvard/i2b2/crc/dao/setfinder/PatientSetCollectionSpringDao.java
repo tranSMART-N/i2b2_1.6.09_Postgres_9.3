@@ -65,6 +65,7 @@ public class PatientSetCollectionSpringDao extends CRCDAO implements  IPatientSe
 			insert_sql = "insert into " + getDbSchemaName() +"qt_patient_set_collection(patient_set_coll_id,result_instance_id,set_index,patient_num) values ("+getDbSchemaName()+"QT_SQ_QPR_PCID.nextval,?,?,?)"; 
 		} else if (dataSourceLookup.getServerType().equalsIgnoreCase(DAOFactoryHelper.SQLSERVER)) { 
 			insert_sql = "insert into " + getDbSchemaName() + "qt_patient_set_collection(result_instance_id,set_index,patient_num) values (?,?,?)";
+		} else if(dataSourceLookup.getServerType().equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
 		}
 		sqlServerSequenceDao  = new SQLServerSequenceDAO(dataSource,dataSourceLookup) ;
 		resultInstance = new QtQueryResultInstance();
@@ -133,6 +134,11 @@ public class PatientSetCollectionSpringDao extends CRCDAO implements  IPatientSe
 		setIndex = 0;
 	}
 
+	//smuniraju: 
+	public String getPatientSetInsertSql() {
+		return insert_sql;
+	}
+	
 	class InsertStatementSetter implements BatchPreparedStatementSetter {
 
 		private QtPatientSetCollection[] data;

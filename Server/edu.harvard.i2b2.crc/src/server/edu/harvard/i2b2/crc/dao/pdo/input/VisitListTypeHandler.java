@@ -146,7 +146,8 @@ public class VisitListTypeHandler extends CRCDAO implements
 						+ " ) where  rnum>="
 						+ minIndex;
 			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
-					DAOFactoryHelper.SQLSERVER)) {
+					DAOFactoryHelper.SQLSERVER) || dataSourceLookup.getServerType().equalsIgnoreCase(
+							DAOFactoryHelper.POSTGRES)) {
 				sqlString = " select encounter_num from ( select encounter_num,row_number() over(order by encounter_num) as rnum  from "
 						+ this.getDbSchemaName()
 						+ "visit_dimension ) as v "
@@ -271,6 +272,12 @@ public class VisitListTypeHandler extends CRCDAO implements
 					+ getTempTableName()
 					+ " (set_index int, char_param1 varchar(100) )";
 			tempStmt.executeUpdate(createTempInputListTable);
+		} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.POSTGRES)) {
+			String createTempInputListTable = "create temporary table "
+					+ getTempTableName()
+					+ " (set_index int, char_param1 varchar(100) )";
+			tempStmt.executeUpdate(createTempInputListTable);
 		}
 		int i = 0, j = 1;
 
@@ -322,7 +329,8 @@ public class VisitListTypeHandler extends CRCDAO implements
 			deleteStmt = conn.createStatement();
 
 			if (dataSourceLookup.getServerType().equalsIgnoreCase(
-					DAOFactoryHelper.SQLSERVER)) {
+					DAOFactoryHelper.SQLSERVER) || dataSourceLookup.getServerType().equalsIgnoreCase(
+							DAOFactoryHelper.POSTGRES)) {
 				conn.createStatement().executeUpdate(
 						"drop table " + getTempTableName());
 			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
@@ -347,7 +355,8 @@ public class VisitListTypeHandler extends CRCDAO implements
 	private String getTempTableName() {
 		String tempTableName = "";
 		if (dataSourceLookup.getServerType().equalsIgnoreCase(
-				DAOFactoryHelper.ORACLE)) {
+				DAOFactoryHelper.ORACLE) || dataSourceLookup.getServerType().equalsIgnoreCase(
+						DAOFactoryHelper.POSTGRES)) {
 			tempTableName = this.getDbSchemaName()
 					+ FactRelatedQueryHandler.TEMP_PARAM_TABLE;
 		} else {

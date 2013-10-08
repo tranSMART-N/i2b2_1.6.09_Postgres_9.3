@@ -141,6 +141,30 @@ public class TablePdoQueryVisitDao extends CRCDAO implements
 
 				query = conn.prepareStatement(finalSql);
 
+			}  else if (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+				log.debug("creating temp table");
+				java.sql.Statement tempStmt = conn.createStatement();
+				tempTableName = getDbSchemaName()
+						+ FactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+				try {
+					tempStmt.executeUpdate("drop table if exists " + tempTableName);
+				} catch (SQLException sqlex) {
+					;
+				}
+
+				uploadTempTable(tempStmt, tempTableName, encounterNumList);
+				String finalSql = "SELECT "
+						+ selectClause
+						+ " FROM "
+						+ getDbSchemaName()
+						+ "visit_dimension visit \n"
+						+ joinClause
+						+ " WHERE visit.encounter_num IN (select distinct char_param1 FROM "
+						+ tempTableName + " ) order by encounter_num,patient_num ";
+				log.debug("Executing [" + finalSql + "]");
+
+				query = conn.prepareStatement(finalSql);
+
 			}
 			long startTimeSql = System.currentTimeMillis();
 			ResultSet resultSet = query.executeQuery();
@@ -168,6 +192,10 @@ public class TablePdoQueryVisitDao extends CRCDAO implements
 					DAOFactoryHelper.SQLSERVER)) {
 				PdoTempTableUtil tempUtil = new PdoTempTableUtil();
 				tempUtil.deleteTempTableSqlServer(conn, tempTableName);
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				PdoTempTableUtil tempUtil = new PdoTempTableUtil();
+				tempUtil.deleteTempTablePostgres(conn, tempTableName);
 			}
 			try {
 				JDBCUtil.closeJdbcResource(null, query, conn);
@@ -248,6 +276,14 @@ public class TablePdoQueryVisitDao extends CRCDAO implements
 		} finally {
 			if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
+				try {
+					visitListTypeHandler.deleteTempTable(conn);
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
 				try {
 					visitListTypeHandler.deleteTempTable(conn);
 				} catch (SQLException e) {
@@ -422,8 +458,20 @@ public class TablePdoQueryVisitDao extends CRCDAO implements
 
 	private void uploadTempTable(Statement tempStmt, String tempTableName,
 			List<String> patientNumList) throws SQLException {
-		String createTempInputListTable = "create table " + tempTableName
-				+ " ( char_param1 varchar(100) )";
+		
+		// smuniraju: Extended to include POSTGRES 
+		// String createTempInputListTable = "create table " + tempTableName
+		// + " ( char_param1 varchar(100) )";
+		
+		String serverType = dataSourceLookup.getServerType();
+		String createTempInputListTable = "";
+		if (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+			createTempInputListTable = "create temporary table " + tempTableName
+			+ " ( char_param1 varchar(100) )";
+		} else if (serverType.equalsIgnoreCase(DAOFactoryHelper.SQLSERVER)) {
+			createTempInputListTable = "create table " + tempTableName
+			+ " ( char_param1 varchar(100) )";
+		}
 		tempStmt.executeUpdate(createTempInputListTable);
 		log.debug("created temp table" + tempTableName);
 		// load to temp table
@@ -482,6 +530,21 @@ public class TablePdoQueryVisitDao extends CRCDAO implements
 					;
 				}
 				String createTempInputListTable = "create table "
+						+ factTempTable
+						+ " ( set_index int, char_param1 varchar(500) )";
+				tempStmt.executeUpdate(createTempInputListTable);
+				log.debug("created temp table" + factTempTable);
+			}  else if (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+				log.debug("creating temp table");
+				java.sql.Statement tempStmt = conn.createStatement();
+				factTempTable = getDbSchemaName()
+						+ FactRelatedQueryHandler.TEMP_FACT_PARAM_TABLE;
+				try {
+					tempStmt.executeUpdate("drop table if exists " + factTempTable);
+				} catch (SQLException sqlex) {
+					;
+				}
+				String createTempInputListTable = "create temporary table "
 						+ factTempTable
 						+ " ( set_index int, char_param1 varchar(500) )";
 				tempStmt.executeUpdate(createTempInputListTable);

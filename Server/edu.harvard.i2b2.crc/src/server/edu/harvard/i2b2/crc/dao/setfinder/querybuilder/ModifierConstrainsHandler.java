@@ -71,16 +71,8 @@ public class ModifierConstrainsHandler {
 
 		constrainSql = "  (" + factTableColumn + " IN ( select "
 				+ factTableColumn + " from " + this.schemaName + dimTableName + " where "
-				+ dimColumnName + " " + dimOperator + " " + dimCode;
-		
-		if (dimOperator.toUpperCase().equals("LIKE"))
-		{
-			
-			constrainSql += " {ESCAPE '?'} ";
-		}
-		constrainSql += "))";
-
-		
+				+ dimColumnName + " " + dimOperator + " " + dimCode 
+				+ " )) ";
 
 
 		

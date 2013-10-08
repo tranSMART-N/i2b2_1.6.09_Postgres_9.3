@@ -318,7 +318,8 @@ public class PdoQueryHandler {
 			DataSourceLookup dataSourceLookup = pdoDaoFactory
 					.getDataSourceLookup();
 			if (dataSourceLookup.getServerType().equalsIgnoreCase(
-					DAOFactoryHelper.ORACLE)) {
+					DAOFactoryHelper.ORACLE) || dataSourceLookup.getServerType().equalsIgnoreCase(
+							DAOFactoryHelper.POSTGRES)) {
 				factRelatedQry = new FactRelatedQueryHandler(pdoDaoFactory
 						.getDataSourceLookup(), inputList, filterList,
 						outputOptionList);

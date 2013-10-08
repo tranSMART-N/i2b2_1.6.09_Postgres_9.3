@@ -7,6 +7,8 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.jdbc.core.JdbcTemplate;
+
 import edu.harvard.i2b2.common.exception.I2B2DAOException;
 import edu.harvard.i2b2.common.exception.I2B2Exception;
 import edu.harvard.i2b2.crc.dao.CRCDAO;
@@ -109,10 +111,10 @@ public class QueryResultEncounterSetGenerator extends CRCDAO implements
 			}
 		} catch (SQLException sqlEx) {
 			exception = sqlEx;
-			log.error("QueryResultEncounterSetGenerator.generateResult:"
+			log.error("QueryResultPatientSetGenerator.generateResult:"
 					+ sqlEx.getMessage(), sqlEx);
 			throw new I2B2DAOException(
-					"QueryResultEncounterSetGenerator.generateResult:"
+					"QueryResultPatientSetGenerator.generateResult:"
 							+ sqlEx.getMessage(), sqlEx);
 
 		} catch (Throwable throwable) {
@@ -155,7 +157,7 @@ public class QueryResultEncounterSetGenerator extends CRCDAO implements
 		// call timing helper to find if timing is samevisit
 
 		String encounterSetSql = " select encounter_num,patient_num from "
-				+ TEMP_DX_TABLE; // + " order by  patient_num,encounter_num ";
+				+ TEMP_DX_TABLE + " order by  patient_num,encounter_num ";
 		if (queryGeneratorVersion.equals("1.6")) {
 			IQueryInstanceDao queryInstanceDao = sfDAOFactory
 					.getQueryInstanceDAO();
@@ -179,14 +181,17 @@ public class QueryResultEncounterSetGenerator extends CRCDAO implements
 			boolean sameVisitFlag = queryTimingHandler
 					.isSameVisit(queryDefType);
 
+			String schemaName = sfDAOFactory.getDataSourceLookup().getFullSchema();			
+			log.debug("SchemaName: " + schemaName);
 			if (sameVisitFlag == false) {
-				encounterSetSql = " select encounter_num, patient_num from "
-						+ sfDAOFactory.getDataSourceLookup().getFullSchema()
-						+ ".visit_dimension  "
+				// smuniraju: Exchange the order of encounter_num, patient_num in SELECT query below.
+				encounterSetSql = " select patient_num, encounter_num from "
+						+ (schemaName == null || schemaName.trim().equals("") ? "" : schemaName + ".")
+						+ "visit_dimension  "
 						+ " where patient_num in (select distinct patient_num from "
 						+ TEMP_DX_TABLE
-						+ ")  ";
-			}
+						+ ")  order by encounter_num,patient_num";
+			} 
 		}
 		return encounterSetSql;
 	}

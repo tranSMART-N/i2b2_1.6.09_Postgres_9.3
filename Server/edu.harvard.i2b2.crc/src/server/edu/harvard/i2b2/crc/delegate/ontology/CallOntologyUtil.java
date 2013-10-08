@@ -3,6 +3,8 @@ package edu.harvard.i2b2.crc.delegate.ontology;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.stream.XMLInputFactory;

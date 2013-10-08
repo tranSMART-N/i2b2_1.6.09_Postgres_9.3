@@ -57,21 +57,30 @@ public class DimensionFilter {
 			String dimColumnDataType = item.getDimColumndatatype();
 			String dimOperator = item.getDimOperator();
 			
+			// smuniraju: Postgres' OVERLAPS clause may contain a single quote(') which shouldn't be escaped
+			// 	Example (birth_date, birth_date) OVERLAPS (interval '365.25 days' * 107), (interval '365.25 days' * 108))
+			// if (dimCode != null) {
+			// 	dimCode = JDBCUtil.escapeSingleQuote(dimCode);
+			// }
+			if (dimCode != null && !(dimOperator.trim().equalsIgnoreCase("OVERLAPS"))) {
+				dimCode = JDBCUtil.escapeSingleQuote(dimCode);
+			}
+
 			if (dimOperator.equalsIgnoreCase("LIKE")
 					&& dimCode.trim().length() > 0) {
-				if (!SqlClauseUtil.isEnclosedinSingleQuote(dimCode)) { 
-					
-					// check if the dim code ends with "\" other wise add it,
-					// so that it matches concept_dimension's concept_path or
-					// provider_dimension's provider_path
-					if (dimCode.lastIndexOf('\\') == dimCode.length() - 1) {
-						dimCode = dimCode + "%";
-					} else {
-						dimCode = dimCode + "\\%";
-					}
+				// check if the dim code ends with "\" other wise add it,
+				// so that it matches concept_dimension's concept_path or
+				// provider_dimension's provider_path
+				if (dimCode.lastIndexOf('\\') == dimCode.length() - 1) {
+					dimCode = dimCode + "%";
+				} else {
+					dimCode = dimCode + "\\%";
 				}
+				
+				// smuniraju: Double escaping of backslash required for POSTGRES
+				dimCode = SqlClauseUtil.doubleEscapeBackslash(dimCode);
 			}
-			
+
 			if (dimOperator.equalsIgnoreCase("IN")) {
 				if (dimColumnDataType.equalsIgnoreCase("T")) {
 					dimCode = SqlClauseUtil.buildINClause(dimCode, true);

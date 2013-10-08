@@ -440,7 +440,7 @@ public class ServicesHandler extends RequestHandler {
 				else if (name.equals("set_project_param"))
 					return runSetParam(pmDb, project, name, rmt.getUsername(), (ProjectType) ((JAXBElement) obj).getValue() );
 				else if (name.equals("set_project_user_param"))
-					return runSetParam(pmDb, ((ProjectType) ((JAXBElement) obj).getValue()).getId(), name, rmt.getUsername(), (ProjectType) ((JAXBElement) obj).getValue() );
+					return runSetParam(pmDb, project, name, rmt.getUsername(), (ProjectType) ((JAXBElement) obj).getValue() );
 				else if (name.equals("get_all_project_user_param"))
 					return runGetAllParam(pmDb, project,  rmt.getUsername(), (ProjectType) ((JAXBElement) obj).getValue() );
 				else if (name.equals("set_user_param"))
@@ -519,7 +519,7 @@ public class ServicesHandler extends RequestHandler {
 					ParamType param = new ParamType();
 					param.setId(Integer.valueOf(value));
 					ProjectType global = new ProjectType();
-					global.setUserName(rmt.getUsername());
+					global.setUserName("SET");
 					global.getParam().add(param);
 					return runDeleteParam(pmDb, project, rmt.getUsername(), global);
 				}				
@@ -544,7 +544,6 @@ public class ServicesHandler extends RequestHandler {
 					ParamType param = new ParamType();
 					param.setId(Integer.valueOf(value));
 					UserType global = new UserType();
-					global.setUserName(rmt.getUsername());
 					global.getParam().add(param);
 					return runDeleteParam(pmDb, project, rmt.getUsername(), global);
 				}					

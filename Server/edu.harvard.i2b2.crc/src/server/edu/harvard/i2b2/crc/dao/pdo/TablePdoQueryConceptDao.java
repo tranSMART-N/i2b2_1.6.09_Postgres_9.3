@@ -88,6 +88,21 @@ public class TablePdoQueryConceptDao extends CRCDAO implements
 						+ " ( set_index int, char_param1 varchar(500) )";
 				tempStmt.executeUpdate(createTempInputListTable);
 				log.debug("created temp table" + factTempTable);
+			} else if (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+				log.debug("creating temp table");
+				java.sql.Statement tempStmt = conn.createStatement();
+				factTempTable = this.getDbSchemaName()
+						+ FactRelatedQueryHandler.TEMP_FACT_PARAM_TABLE;
+				try {
+					tempStmt.executeUpdate("drop table if exists " + factTempTable);
+				} catch (SQLException sqlex) {
+					;
+				}
+				String createTempInputListTable = "create temporary table "
+						+ factTempTable
+						+ " ( set_index int, char_param1 varchar(500) )";
+				tempStmt.executeUpdate(createTempInputListTable);
+				log.debug("created temp table" + factTempTable);
 			}
 			// if the inputlist is enumeration, then upload the enumerated input
 			// to temp table.
@@ -120,7 +135,6 @@ public class TablePdoQueryConceptDao extends CRCDAO implements
 					+ "concept_dimension concept where concept_cd in (select distinct char_param1 from "
 					+ factTempTable + ") order by concept_path";
 			log.debug("Executing SQL [" + finalSql + "]");
-			
 
 			query = conn.prepareStatement(finalSql);
 
@@ -241,6 +255,28 @@ public class TablePdoQueryConceptDao extends CRCDAO implements
 
 				query = conn.prepareStatement(finalSql);
 
+			} else if (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+				log.debug("creating temp table");
+				java.sql.Statement tempStmt = conn.createStatement();
+				tempTableName = this.getDbSchemaName()
+						+ FactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+				try {
+					tempStmt.executeUpdate("drop table if exists " + tempTableName);
+				} catch (SQLException sqlex) {
+					;
+				}
+
+				uploadTempTable(tempStmt, tempTableName, conceptCdList);
+				String finalSql = "SELECT "
+						+ selectClause
+						+ " FROM "
+						+ getDbSchemaName()
+						+ "concept_dimension concept WHERE concept.concept_cd IN (select distinct char_param1 FROM "
+						+ tempTableName + ") order by concept_path";
+				log.debug("Executing [" + finalSql + "]");
+
+				query = conn.prepareStatement(finalSql);
+
 			}
 			ResultSet resultSet = query.executeQuery();
 
@@ -270,8 +306,20 @@ public class TablePdoQueryConceptDao extends CRCDAO implements
 
 	private void uploadTempTable(Statement tempStmt, String tempTableName,
 			List<String> patientNumList) throws SQLException {
-		String createTempInputListTable = "create table " + tempTableName
-				+ " ( char_param1 varchar(100) )";
+		
+		// smuniraju: Extended to include POSTGRES 
+		// String createTempInputListTable = "create table " + tempTableName
+		// 		+ " ( char_param1 varchar(100) )";
+		
+		String createTempInputListTable = "";
+		String serverType = dataSourceLookup.getServerType();
+		if (serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+			createTempInputListTable = "create temporary table " + tempTableName
+			+ " ( char_param1 varchar(100) )";
+		} else if (serverType.equalsIgnoreCase(DAOFactoryHelper.SQLSERVER)) {
+			createTempInputListTable = "create table " + tempTableName
+			+ " ( char_param1 varchar(100) )";
+		}
 		tempStmt.executeUpdate(createTempInputListTable);
 		log.debug("created temp table" + tempTableName);
 		// load to temp table

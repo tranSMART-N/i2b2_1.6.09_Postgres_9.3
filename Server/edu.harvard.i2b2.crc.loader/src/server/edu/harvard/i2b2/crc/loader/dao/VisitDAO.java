@@ -70,9 +70,17 @@ public class VisitDAO extends CRCLoaderDAO implements IVisitDAO {
 	public void createTempTable(String tempTableName) throws I2B2Exception {
 		Connection conn = null;
 		try {
-			conn = this.getDataSource().getConnection();
-			CallableStatement callStmt = conn.prepareCall("{call "
-					+ this.getDbSchemaName() + "CREATE_TEMP_VISIT_TABLE(?,?)}");
+			// smuniraju: Postgres requires only IN arguments to be specified in the call to proc.
+			// CallableStatement callStmt = conn.prepareCall("{call " + this.getDbSchemaName() + "CREATE_TEMP_VISIT_TABLE(?,?)}");
+			String prepareCallString = "";  
+			if(dataSourceLookup.getServerType().equalsIgnoreCase(DataSourceLookupDAOFactory.POSTGRES)) {
+				prepareCallString = "{call " + this.getDbSchemaName() + "CREATE_TEMP_VISIT_TABLE(?)}";
+			} else {
+				prepareCallString = "{call " + this.getDbSchemaName() + "CREATE_TEMP_VISIT_TABLE(?,?)}";
+			}
+			conn = getDataSource().getConnection();
+			CallableStatement callStmt = conn.prepareCall(prepareCallString);
+			conn = this.getDataSource().getConnection();			
 			callStmt.setString(1, tempTableName);
 			callStmt.registerOutParameter(2, java.sql.Types.VARCHAR);
 			callStmt.execute();
@@ -108,10 +116,16 @@ public class VisitDAO extends CRCLoaderDAO implements IVisitDAO {
 			throws I2B2Exception {
 		Connection conn = null;
 		try {
-			conn = this.getDataSource().getConnection();
-			CallableStatement callStmt = conn.prepareCall("{call "
-					+ this.getDbSchemaName()
-					+ "INSERT_ENCOUNTERVISIT_FROMTEMP(?,?,?)}");
+			// smuniraju: Postgres requires only IN arguments to be specified in the call to proc.
+			// CallableStatement callStmt = conn.prepareCall("{call " + this.getDbSchemaName() + "INSERT_ENCOUNTERVISIT_FROMTEMP(?,?,?)}");
+			String prepareCallString = "";  
+			if(dataSourceLookup.getServerType().equalsIgnoreCase(DataSourceLookupDAOFactory.POSTGRES)) {
+				prepareCallString = "{call " + this.getDbSchemaName() + "INSERT_ENCOUNTERVISIT_FROMTEMP(?,?)}";
+			} else {
+				prepareCallString = "{call " + this.getDbSchemaName() + "INSERT_ENCOUNTERVISIT_FROMTEMP(?,?,?)}";
+			}
+			conn = getDataSource().getConnection();
+			CallableStatement callStmt = conn.prepareCall(prepareCallString);
 			callStmt.setString(1, tempTableName);
 			callStmt.setInt(2, uploadId);
 			callStmt.registerOutParameter(3, java.sql.Types.VARCHAR);

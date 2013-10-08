@@ -260,15 +260,17 @@ public class RecursiveBuild extends CRCDAO {
 		
 	}
 	
-	public String  deleteTempTable()  { 
-	
-		return " delete  "+ this.getDbSchemaName() + tempTableNameMap.getTempDxTableName() + " \n<*>\n delete  " + this.getDbSchemaName()+ tempTableNameMap.getTempTableName();
+	public String  deleteTempTable()  { 		
+		// smuniraju: Modified the query to include 'FROM' because keyword FROM is required in POSTGRES. 
+		return " delete from "+ this.getDbSchemaName() + tempTableNameMap.getTempDxTableName() + 
+			   " \n<*>\n delete from " + this.getDbSchemaName()+ tempTableNameMap.getTempTableName();
 		
 	}
 	
 
 	public String deleteTempMaster(String masterId,int level) {
-		return "\n <*> delete " + this.getDbSchemaName() + tempTableNameMap.getTempMasterTable() +" where master_id = '" + masterId + "' and level_no >= " + level + "\n<*>";
+		// smuniraju: Modified the query to include 'FROM' because keyword FROM is required in POSTGRES.
+		return "\n <*> delete from " + this.getDbSchemaName() + tempTableNameMap.getTempMasterTable() +" where master_id = '" + masterId + "' and level_no >= " + level + "\n<*>";
 	}
 	
 	

@@ -675,6 +675,7 @@ public class SQLServerFactRelatedQueryHandler extends CRCDAO implements
 				}
 
 				factByProviderSql += (" SELECT  "
+				//factByProviderSql += (" SELECT /*+ index (obs OBFACT_PATCON_SDED_NVTV_IDX)*/ " Recombinant change
 						+ obsFactSelectClause + " FROM \n");
 
 				// check if the item key has "patient_set_coll_id:XXXX" as
@@ -930,6 +931,7 @@ public class SQLServerFactRelatedQueryHandler extends CRCDAO implements
 			String tableLookupJoinClause, String fullWhereClause) {
 		String factSql = "SELECT  b.*, ROWNUM rnum FROM (\n";
 		factSql += (" SELECT  "
+		//factSql += (" SELECT /*+ index (obs OBFACT_PATCON_SDED_NVTV_IDX)*/ " Recombinant change
 				+ obsFactSelectClause + " FROM " + this.getDbSchemaName() + "observation_FACT obs\n");
 
 		factSql += tableLookupJoinClause;

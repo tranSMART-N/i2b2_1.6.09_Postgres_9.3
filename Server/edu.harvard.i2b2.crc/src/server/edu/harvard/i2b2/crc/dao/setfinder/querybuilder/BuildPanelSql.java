@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.harvard.i2b2.crc.dao.CRCDAO;
 import edu.harvard.i2b2.crc.datavo.db.DataSourceLookup;
+import edu.harvard.i2b2.crc.loader.dao.DataSourceLookupDAOFactory;
 
 public class BuildPanelSql extends CRCDAO {
 	private String tempTableName = null;
@@ -89,6 +90,7 @@ public class BuildPanelSql extends CRCDAO {
 			String tempTableName, int panelCount, int oldPanelCount,  boolean encounterFlag,
 			boolean instanceNumFlag, boolean panelInvertFlag,  boolean firstPanelFlag, boolean invertQueryFlag, boolean firstItemFlag) {
 		String encounterNumClause = " ", instanceNumClause = " ";
+		String encounterNumClausePostgres = " ", instanceNumClausePostgres = " ";
 		if (instanceNumFlag) {
 			instanceNumClause = " and  " + this.getDbSchemaName()
 					+ tempTableName + ".encounter_num = t.encounter_num and "
@@ -100,9 +102,15 @@ public class BuildPanelSql extends CRCDAO {
 					+ ".concept_cd = t.concept_cd  and " 
 					+ this.getDbSchemaName() + tempTableName
 					+ ".provider_id = t.provider_id ";
+			encounterNumClausePostgres = " and  t1.encounter_num = t3.encounter_num and "
+					+ "t1.instance_num = t3.instance_num ";
 		} else if (encounterFlag) {
 			encounterNumClause = " and " + this.getDbSchemaName()
 					+ tempTableName + ".encounter_num = t.encounter_num ";
+			
+			// smuniraju: Since postgres has to do a self join, tablename cannot be prefixed to the 
+			// fieldname, table alias must be used instead.
+			encounterNumClausePostgres = " and t1.encounter_num = t3.encounter_num ";
 		}
 		String nonFirstPanelItemSql = " ";
 		if (panelInvertFlag) {
@@ -154,5 +162,4 @@ public class BuildPanelSql extends CRCDAO {
 		groupbyClause += " " +  groupbyClausePrefix + "patient_num ";
 		return groupbyClause;
 	}
-
 }

@@ -66,16 +66,12 @@ public class CheckSkipTempTable {
 				log.debug("Setfinder query without temp table panel's total occurences greater than 1 [ " + totOcc.getValue() + " ]");
 				break;
 			}
-
-			//cdh@20120911 removed accuracy check because it's not implemented in ui
-			/*
 			int accuracyScale = panelType.getPanelAccuracyScale();
 			if (accuracyScale > 0) {
 				accuracyScaleFlag = true;
 				log.debug("Setfinder query without temp table panel's accuracy scale greater than 1 [ " + accuracyScale + " ]");
 				break;
 			}
-			*/
 			//check if the panel timing is ANY
 			currPanelTiming = panelType.getPanelTiming();
 			if (currPanelTiming != null && currPanelTiming.trim().length()>0) { 

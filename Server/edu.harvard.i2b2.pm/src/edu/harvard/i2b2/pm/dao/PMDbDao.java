@@ -1457,84 +1457,15 @@ public class PMDbDao extends JdbcDaoSupport {
 
 	public int setParam(Object utype, String project, String name, String caller) throws I2B2DAOException, I2B2Exception{
 		int numRowsAdded = 0;
-		log.debug("Caller: "+ caller);
-		log.debug("Project: " + project);
 
-		if ((utype instanceof UserType) && (caller.equals(((UserType) utype).getUserName())))
-		{
-			log.debug("Searching for existing User Param");
-
-			if ((getParam(utype, false) == null) || (getParam(utype, false).size() == 0))
-			{
-				String addSql = "insert into pm_user_params " + 
-						"(user_id, datatype_cd, param_name_cd, value, change_date, entry_date, changeby_char, status_cd) values (?,?,?,?,?,?,?,?)";
-				log.debug("Ading new User Param");
-				numRowsAdded = jt.update(addSql, 
-						((UserType) utype).getUserName(),
-						((UserType) utype).getParam().get(0).getDatatype(),
-						((UserType) utype).getParam().get(0).getName(),
-						((UserType) utype).getParam().get(0).getValue(),
-						Calendar.getInstance().getTime(),
-						Calendar.getInstance().getTime(),	
-						caller,
-						"A");
-			} else 
-			{
-				//user already exists, lets try to update
-				String addSql = "update pm_user_params " + 
-						"set value = ?, datatype_cd = ?, change_date = ?,  status_cd = 'A' where changeby_char = ? and id = ? ";
-				log.debug("Updating  User Param");
-
-				numRowsAdded = jt.update(addSql, 
-						((UserType) utype).getParam().get(0).getValue(),
-						((UserType) utype).getParam().get(0).getDatatype(),
-						Calendar.getInstance().getTime(),
-						caller,
-						((UserType) utype).getParam().get(0).getId());
-                if (numRowsAdded == 0)
-                    throw new I2B2DAOException("Record does not exist or access denied.");
-				
-			}
-		}  		
-		else if ((utype instanceof ProjectType) && (((ProjectType) utype).getUserName() != null) && (((ProjectType) utype).getUserName().equals(caller) ))
-		{
-			if ((getParam(utype, false) == null) || (getParam(utype, false).size() == 0))
-			{
-				String addSql = "insert into pm_project_user_params " + 
-						"(project_id, user_id, datatype_cd, param_name_cd, value, change_date, entry_date, changeby_char, status_cd) values (?,?,?,?,?,?,?,?,?)";
-				numRowsAdded = jt.update(addSql, 
-						((ProjectType) utype).getId(),
-						((ProjectType) utype).getUserName(),								
-						((ProjectType) utype).getParam().get(0).getDatatype(),
-						((ProjectType) utype).getParam().get(0).getName(),
-						((ProjectType) utype).getParam().get(0).getValue(),
-						Calendar.getInstance().getTime(),
-						Calendar.getInstance().getTime(),	
-						caller,
-						"A");
-			} else 
-			{
-				//user already exists, lets try to update
-				String addSql = "update pm_project_user_params " + 
-						"set value = ?, datatype_cd = ?, change_date = ?,   status_cd = 'A' where changeby_char = ? and id = ?";
-
-				numRowsAdded = jt.update(addSql, 
-						((ProjectType) utype).getParam().get(0).getValue(),
-						((ProjectType) utype).getParam().get(0).getDatatype(),
-						Calendar.getInstance().getTime(),			
-						caller,
-						((ProjectType) utype).getParam().get(0).getId());
-                if (numRowsAdded == 0)
-                    throw new I2B2DAOException("Record does not exist or access denied.");
-			}
-
-		}	else if (validateRole(caller, "admin", null) || validateRole(caller, "manager", project))
+		if (validateRole(caller, "admin", null) || validateRole(caller, "manager", project))
 		{
 			if (utype instanceof ParamsType)
 			{
 
 
-			}	else if (utype instanceof UserType) 
+			}
+			else if (utype instanceof UserType)
 			{
 				log.debug("Searching for existing User Param");
 
@@ -1566,7 +1497,7 @@ public class PMDbDao extends JdbcDaoSupport {
 							caller,
 							((UserType) utype).getParam().get(0).getId());
 				}
-			}		
+			}			
 			else if (utype instanceof ProjectType)
 			{
 				log.debug("Testing to see if username is set: " + ((ProjectType) utype).getUserName() );
@@ -2007,11 +1938,33 @@ public class PMDbDao extends JdbcDaoSupport {
 
 	public int deleteParam(Object utype, final String project, String caller) throws I2B2DAOException, I2B2Exception{
 		int numRowsAdded = 0;
+
 		if (validateRole(caller, "admin", null) || validateRole(caller, "manager", project))
 		{
 			try {
 
-				if (utype instanceof UserType)
+				if (utype instanceof ProjectType)
+				{
+					if ((((ProjectType) utype).getUserName() != null) && (!((ProjectType) utype).getUserName().equals("") ))
+					{
+						String addSql = "update pm_project_user_params " + 
+								"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
+
+						numRowsAdded = jt.update(addSql, 
+								Calendar.getInstance().getTime(),				
+								caller,
+								((ProjectType) utype).getParam().get(0).getId());
+
+					} else {
+						String addSql = "update pm_project_params " + 
+								"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
+
+						numRowsAdded = jt.update(addSql, 
+								Calendar.getInstance().getTime(),				
+								caller,
+								((ProjectType) utype).getParam().get(0).getId());
+					}
+				} else if (utype instanceof UserType)
 				{
 					String addSql = "update pm_user_params " + 
 							"set status_cd = 'D', change_date = ?, changeBy_char = ? where id = ?";
@@ -2020,126 +1973,103 @@ public class PMDbDao extends JdbcDaoSupport {
 							Calendar.getInstance().getTime(),
 							caller,
 							((UserType) utype).getParam().get(0).getId());
-				} else
+				} else if (utype instanceof ConfigureType)
+				{
 
-					if (utype instanceof ProjectType)
+					if (((ConfigureType) utype).getParam().isEmpty() == false) // || (((ConfigureType) utype).getDomainId()).size() == 0))
 					{
-						if ((((ProjectType) utype).getUserName() != null) && (!((ProjectType) utype).getUserName().equals("") ))
-						{
-							String addSql = "update pm_project_user_params " + 
-									"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
-
-							numRowsAdded = jt.update(addSql, 
-									Calendar.getInstance().getTime(),				
-									caller,
-									((ProjectType) utype).getParam().get(0).getId());
-
-						} else {
-							String addSql = "update pm_project_params " + 
-									"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
-
-							numRowsAdded = jt.update(addSql, 
-									Calendar.getInstance().getTime(),				
-									caller,
-									((ProjectType) utype).getParam().get(0).getId());
-						}
-					} else if (utype instanceof ConfigureType)
-					{
-
-						if (((ConfigureType) utype).getParam().isEmpty() == false) // || (((ConfigureType) utype).getDomainId()).size() == 0))
-						{
-							String addSql = "update pm_hive_params " + 
-									"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
-
-							numRowsAdded = jt.update(addSql, 
-									Calendar.getInstance().getTime(),				
-									caller,
-									((ConfigureType) utype).getParam().get(0).getId());
-
-						} else {
-							String addSql = "update pm_hive_data " + 
-									"set status_cd = 'D', change_date = ?, changeby_char = ? where domain_id = ? and active = 0";
-
-							numRowsAdded = jt.update(addSql, 
-									Calendar.getInstance().getTime(),				
-									caller,
-									((ConfigureType) utype).getDomainId());
-						}
-					} else if (utype instanceof CellDataType)
-					{
-						String addSql = "update pm_cell_params " + 
+						String addSql = "update pm_hive_params " + 
 								"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
 
 						numRowsAdded = jt.update(addSql, 
 								Calendar.getInstance().getTime(),				
 								caller,
-								((CellDataType) utype).getParam().get(0).getId());
-					} else if (utype instanceof ApprovalType)
-					{
-						String addSql = "update pm_approval_params " + 
-								"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
+								((ConfigureType) utype).getParam().get(0).getId());
+
+					} else {
+						String addSql = "update pm_hive_data " + 
+								"set status_cd = 'D', change_date = ?, changeby_char = ? where domain_id = ? and active = 0";
 
 						numRowsAdded = jt.update(addSql, 
 								Calendar.getInstance().getTime(),				
 								caller,
-								((ApprovalType) utype).getParam().get(0).getId());
-					} else if (utype instanceof GlobalDataType)
-					{
-						String addSql = "update pm_global_params " + 
-								"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
-
-						numRowsAdded = jt.update(addSql, 
-								Calendar.getInstance().getTime(),				
-								caller,
-								((GlobalDataType) utype).getParam().get(0).getId());
-					}  else if (utype instanceof RoleType)
-					{
-
-						if (((RoleType) utype).getRole().equals("DATA_PROT"))
-						{
-							numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
-						}
-						else if (((RoleType) utype).getRole().equals("DATA_DEID")) 
-						{
-							numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
-						}
-						else if (((RoleType) utype).getRole().equals("DATA_LDS")) 
-						{
-							numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_LDS", caller, utype);
-						}
-						else if (((RoleType) utype).getRole().equals("DATA_AGG")) 
-						{
-							numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_LDS", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_AGG", caller, utype);
-						}					
-						else if (((RoleType) utype).getRole().equals("DATA_OBFSC")) 
-						{
-							numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_LDS", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_AGG", caller, utype);
-							numRowsAdded += executeRemoveRole("DATA_OBFSC", caller, utype);
-						}					
-						//admin track
-						if ((((RoleType) utype).getRole().equals("MANAGER")) ) 
-						{
-							numRowsAdded += executeRemoveRole("MANAGER", caller, utype);
-						}					
-						else if ((((RoleType) utype).getRole().equals("USER")) ) 
-						{
-							numRowsAdded += executeRemoveRole("MANAGER", caller, utype);
-							numRowsAdded += executeRemoveRole("USER", caller, utype);
-						} else 
-						{
-							numRowsAdded += executeRemoveRole(((RoleType) utype).getRole(), caller, utype);
-						}	
-
+								((ConfigureType) utype).getDomainId());
 					}
+				} else if (utype instanceof CellDataType)
+				{
+					String addSql = "update pm_cell_params " + 
+							"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
+
+					numRowsAdded = jt.update(addSql, 
+							Calendar.getInstance().getTime(),				
+							caller,
+							((CellDataType) utype).getParam().get(0).getId());
+				} else if (utype instanceof ApprovalType)
+				{
+					String addSql = "update pm_approval_params " + 
+							"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
+
+					numRowsAdded = jt.update(addSql, 
+							Calendar.getInstance().getTime(),				
+							caller,
+							((ApprovalType) utype).getParam().get(0).getId());
+				} else if (utype instanceof GlobalDataType)
+				{
+					String addSql = "update pm_global_params " + 
+							"set status_cd = 'D', change_date = ?, changeby_char = ? where id = ?";
+
+					numRowsAdded = jt.update(addSql, 
+							Calendar.getInstance().getTime(),				
+							caller,
+							((GlobalDataType) utype).getParam().get(0).getId());
+				}  else if (utype instanceof RoleType)
+				{
+
+					if (((RoleType) utype).getRole().equals("DATA_PROT"))
+					{
+						numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
+					}
+					else if (((RoleType) utype).getRole().equals("DATA_DEID")) 
+					{
+						numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
+					}
+					else if (((RoleType) utype).getRole().equals("DATA_LDS")) 
+					{
+						numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_LDS", caller, utype);
+					}
+					else if (((RoleType) utype).getRole().equals("DATA_AGG")) 
+					{
+						numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_LDS", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_AGG", caller, utype);
+					}					
+					else if (((RoleType) utype).getRole().equals("DATA_OBFSC")) 
+					{
+						numRowsAdded += executeRemoveRole("DATA_PROT", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_DEID", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_LDS", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_AGG", caller, utype);
+						numRowsAdded += executeRemoveRole("DATA_OBFSC", caller, utype);
+					}					
+					//admin track
+					if ((((RoleType) utype).getRole().equals("MANAGER")) ) 
+					{
+						numRowsAdded += executeRemoveRole("MANAGER", caller, utype);
+					}					
+					else if ((((RoleType) utype).getRole().equals("USER")) ) 
+					{
+						numRowsAdded += executeRemoveRole("MANAGER", caller, utype);
+						numRowsAdded += executeRemoveRole("USER", caller, utype);
+					} else 
+					{
+						numRowsAdded += executeRemoveRole(((RoleType) utype).getRole(), caller, utype);
+					}	
+
+				}
 
 				if (numRowsAdded == 0)
 					throw new I2B2DAOException("not updated, does it exist?");
@@ -2148,32 +2078,7 @@ public class PMDbDao extends JdbcDaoSupport {
 				log.error(e.getMessage());
 				throw new I2B2DAOException("Data access error " , e);
 			}
-		} else if ((utype instanceof UserType) && (caller.equals(((UserType) utype).getUserName())))
-		{
-			String addSql = "update pm_user_params " + 
-					"set status_cd = 'D', change_date = ?  where user_id = ? and changeby_char = ? and id = ?";
-
-			numRowsAdded = jt.update(addSql, 
-					Calendar.getInstance().getTime(),
-					caller,
-					caller,
-					((UserType) utype).getParam().get(0).getId());
-            if (numRowsAdded == 0)
-                throw new I2B2DAOException("Record does not exist or access denied.");
-		} else if ((utype instanceof ProjectType) && (((ProjectType) utype).getUserName() != null) && (((ProjectType) utype).getUserName().equals(caller) ))
-		{
-			String addSql = "update pm_project_user_params " + 
-					"set status_cd = 'D', change_date = ? where user_id = ? and changeby_char = ? and id = ?";
-
-			numRowsAdded = jt.update(addSql, 
-					Calendar.getInstance().getTime(),				
-					caller,
-					caller,
-					((ProjectType) utype).getParam().get(0).getId());
-            if (numRowsAdded == 0)
-                throw new I2B2DAOException("Record does not exist or access denied.");
-
-		} 
+		}
 		else 
 		{
 			throw new I2B2DAOException("Access Denied for " + caller);

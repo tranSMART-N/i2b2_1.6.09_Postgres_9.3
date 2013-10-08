@@ -80,6 +80,7 @@ import edu.harvard.i2b2.crc.role.AuthrizationHelper;
 import edu.harvard.i2b2.crc.util.I2B2RequestMessageHelper;
 import edu.harvard.i2b2.crc.util.ParamUtil;
 import edu.harvard.i2b2.crc.util.QueryProcessorUtil;
+import edu.harvard.i2b2.crc.util.SqlClauseUtil;
 
 /**
  * This is the PDO Query ejb class. It passes pdo query request's to the
@@ -193,7 +194,7 @@ public class PdoQueryBean implements SessionBean {
 								ItemMetaDataHandler itemMetaDataHandler = new ItemMetaDataHandler(requestXml);
 								String modifierKey = modifierConstrain.getModifierKey();
 								String modifierAppliedPath = modifierConstrain.getAppliedPath();
-								ModifierType modifierType = itemMetaDataHandler.getModifierDataFromOntologyCell(modifierKey, modifierAppliedPath, helper.getDataSourceLookup().getServerType());
+								ModifierType modifierType = itemMetaDataHandler.getModifierDataFromOntologyCell(modifierKey, modifierAppliedPath);
 								copyModifierToItem(item,modifierType);
 								
 								//cache the modifier metadat in the map

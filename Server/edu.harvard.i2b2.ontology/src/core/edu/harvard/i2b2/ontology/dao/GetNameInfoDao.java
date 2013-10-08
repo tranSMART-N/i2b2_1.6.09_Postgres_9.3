@@ -39,6 +39,7 @@ import edu.harvard.i2b2.ontology.datavo.vdo.VocabRequestType;
 import edu.harvard.i2b2.ontology.datavo.vdo.XmlValueType;
 import edu.harvard.i2b2.ontology.util.OntologyUtil;
 import edu.harvard.i2b2.ontology.util.Roles;
+import edu.harvard.i2b2.ontology.util.StringUtil;
 
 public class GetNameInfoDao extends JdbcDaoSupport {
 	

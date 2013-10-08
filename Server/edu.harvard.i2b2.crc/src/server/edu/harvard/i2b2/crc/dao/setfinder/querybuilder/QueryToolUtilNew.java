@@ -54,7 +54,8 @@ public class QueryToolUtilNew extends CRCDAO {
 			tempTableName = "#global_temp_table";
 			tempDxTableName = "#dx";
 		} else if (this.dataSourceLookup.getServerType().equalsIgnoreCase(
-				DAOFactoryHelper.ORACLE)) {
+				DAOFactoryHelper.ORACLE) || this.dataSourceLookup.getServerType().equalsIgnoreCase(
+						DAOFactoryHelper.POSTGRES)) {
 			tempTableName = "QUERY_GLOBAL_TEMP";
 			tempDxTableName = "DX";
 		}

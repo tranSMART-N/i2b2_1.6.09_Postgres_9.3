@@ -122,6 +122,26 @@ public class PdoQueryPidDao extends CRCDAO implements IPdoQueryPidDao {
 
 				query = conn.prepareStatement(finalSql);
 				resultSet = query.executeQuery();
+			}  else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				// create temp table
+				// load to temp table
+				// execute sql
+				log.debug("creating temp table");
+				java.sql.Statement tempStmt = conn.createStatement();
+
+				uploadTempTable(tempStmt, patientNumList);
+				String finalSql = "SELECT "
+						+ selectClause
+						+ " FROM "
+						+ getDbSchemaName()
+						+ "patient_mapping pm WHERE pm.patient_num IN (select distinct char_param1 FROM "
+						+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE
+						+ ") order by pm_patient_num";
+				log.debug("Executing [" + finalSql + "]");
+
+				query = conn.prepareStatement(finalSql);
+				resultSet = query.executeQuery();
 			}
 
 			RPDRPdoFactory.PidBuilder pidBuilder = new RPDRPdoFactory.PidBuilder(
@@ -142,6 +162,11 @@ public class PdoQueryPidDao extends CRCDAO implements IPdoQueryPidDao {
 				deleteTempTable(
 						conn,
 						SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				deleteTempTable(
+						conn,
+						FactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
 			}
 			try {
 				JDBCUtil.closeJdbcResource(null, query, conn);
@@ -387,21 +412,48 @@ public class PdoQueryPidDao extends CRCDAO implements IPdoQueryPidDao {
 
 	private void uploadTempTable(Statement tempStmt, List<String> patientNumList)
 			throws SQLException {
-		String createTempInputListTable = "create table "
-				+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE
+		
+		// smuniraju: Extended to include POSTGRES 
+		// String createTempInputListTable = "create table "
+		// 	+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE
+		// 	+ " ( char_param1 varchar(100) )";
+		
+		String createTempInputListTable = "";
+		String tempTableName = "";
+		if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.POSTGRES)) {
+			tempTableName = FactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE; 
+			createTempInputListTable = "create temporary table "
+				+ tempTableName
 				+ " ( char_param1 varchar(100) )";
+		} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+				DAOFactoryHelper.SQLSERVER)) {
+			tempTableName = SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE;
+			createTempInputListTable = "create table "
+				+ tempTableName
+				+ " ( char_param1 varchar(100) )";
+		}
+		
 		tempStmt.executeUpdate(createTempInputListTable);
-		log.debug("created temp table"
-				+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
+		
+		// smuniraju: Extended to include POSTGRES 
+		// log.debug("created temp table" + SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE);
+		log.debug("created temp table" + tempTableName);
+		
 		// load to temp table
 		// TempInputListInsert inputListInserter = new
 		// TempInputListInsert(dataSource,TEMP_PDO_INPUTLIST_TABLE);
 		// inputListInserter.setBatchSize(100);
 		int i = 0;
 		for (String singleValue : patientNumList) {
+			// smuniraju: Extended to include POSTGRES 
+			// tempStmt.addBatch("insert into "
+			// 		+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE
+			// 		+ " values ('" + singleValue + "' )");
+					
 			tempStmt.addBatch("insert into "
-					+ SQLServerFactRelatedQueryHandler.TEMP_PDO_INPUTLIST_TABLE
-					+ " values ('" + singleValue + "' )");
+					+ tempTableName
+					+ " values ('" + singleValue + "' )");		
 			log.debug("adding batch" + singleValue);
 			i++;
 			if (i % 100 == 0) {

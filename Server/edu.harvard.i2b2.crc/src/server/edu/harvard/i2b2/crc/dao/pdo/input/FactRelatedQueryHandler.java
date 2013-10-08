@@ -23,6 +23,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.w3c.dom.Element;
 
+import com.ctc.wstx.util.StringUtil;
+
 import edu.harvard.i2b2.common.exception.I2B2DAOException;
 import edu.harvard.i2b2.common.exception.I2B2Exception;
 import edu.harvard.i2b2.common.util.db.JDBCUtil;
@@ -57,6 +59,7 @@ import edu.harvard.i2b2.crc.datavo.pdo.query.ItemType.ConstrainByDate;
 import edu.harvard.i2b2.crc.datavo.pdo.query.PanelType.TotalItemOccurrences;
 import edu.harvard.i2b2.crc.util.ItemKeyUtil;
 import edu.harvard.i2b2.crc.util.ParamUtil;
+import edu.harvard.i2b2.crc.util.SqlClauseUtil;
 
 /**
  * Observation fact handler class for pdo request. This class uses given pdo
@@ -134,7 +137,9 @@ public class FactRelatedQueryHandler extends CRCDAO implements
 	// "TEMP_PDO_INPUTLIST";
 	public static final String TEMP_PARAM_TABLE = "GLOBAL_TEMP_PARAM_TABLE";
 	public static final String TEMP_FACT_PARAM_TABLE = "GLOBAL_TEMP_FACT_PARAM_TABLE";
-
+	// smuniraju: Used only for POSTGRES in places where Oracle uses Arrays 
+	public static final String TEMP_PDO_INPUTLIST_TABLE = "TEMP_PDO_INPUTLIST_TABLE";
+	
 	private List<String> panelSqlList = new ArrayList<String>();
 	
 	private Map projectParamMap = null;
@@ -190,7 +195,6 @@ public class FactRelatedQueryHandler extends CRCDAO implements
 		this.requestVersion = requestVersion;
 	}
 	
-
 	public List<String> getPanelSqlList() {
 		return this.panelSqlList;
 	}
@@ -305,7 +309,6 @@ public class FactRelatedQueryHandler extends CRCDAO implements
 				// generate sql
 				String querySql = buildQuery(null,
 						PdoQueryHandler.PLAIN_PDO_TYPE);
-				
 				log.debug("Executing sql[" + querySql + "]");
 				panelSqlList.add(querySql);
 				if (createTempTable) {
@@ -564,13 +567,13 @@ public class FactRelatedQueryHandler extends CRCDAO implements
 		DateConstrainHandler dateConstrainHandler = new DateConstrainHandler(
 				dataSourceLookup);
 
-	
-		
 		if (panel.getName() != null) {
 			panelName = JDBCUtil.escapeSingleQuote(panel.getName());
 		}
 
-		obsFactSelectClause += (", '" + panelName + "' panel_name ");
+		// smuniraju: Postgres requires additional escaping of backslash.
+		// obsFactSelectClause += (", '" + panelName + "' panel_name ");
+		obsFactSelectClause += (", '" + SqlClauseUtil.escapeBackslash(panelName) + "' panel_name ");
 		int totalItemOccurance = 0;
 		if (panel.getTotalItemOccurrences() != null) {
 			totalItemOccurance = panel.getTotalItemOccurrences().getValue();
@@ -614,6 +617,7 @@ public class FactRelatedQueryHandler extends CRCDAO implements
 				}
 
 				factByProviderSql += (" SELECT  "
+				//factByProviderSql += (" SELECT /*+ index (obs OBFACT_PATCON_SDED_NVTV_IDX)*/ " Recombinant change
 						+ obsFactSelectClause + " FROM \n");
 
 				// check if the item key has "patient_set_coll_id:XXXX" as
@@ -873,6 +877,7 @@ public class FactRelatedQueryHandler extends CRCDAO implements
 			String tableLookupJoinClause, String fullWhereClause) {
 		String factSql = "SELECT  b.*, ROWNUM rnum FROM (\n";
 		factSql += (" SELECT  "
+		//factSql += (" SELECT /*+ index (obs OBFACT_PATCON_SDED_NVTV_IDX)*/ " Recombinant change
 				+ obsFactSelectClause + " FROM " + this.getDbSchemaName() + "observation_FACT obs\n");
 
 		factSql += tableLookupJoinClause;

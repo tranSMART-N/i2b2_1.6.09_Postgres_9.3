@@ -111,7 +111,7 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 		String sql = "select *  from " + getDbSchemaName()
 				+ "qt_query_instance where query_master_id = ?";
 		List<QtQueryInstance> queryInstanceList = jdbcTemplate.query(sql,
-				new Object[] { queryMasterId }, queryInstanceMapper);
+				new Object[] { Integer.valueOf(queryMasterId) }, queryInstanceMapper);
 		return queryInstanceList;
 	}
 
@@ -125,10 +125,14 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 		String sql = "select *  from " + getDbSchemaName()
 				+ "qt_query_instance  where query_instance_id =?";
 
+		/* smuniraju
 		QtQueryInstance queryInstance = (QtQueryInstance) jdbcTemplate
-				.queryForObject(sql, new Object[] { queryInstanceId },
+				.queryForObject(sql, new Object[] { Integer.valueOf(queryInstanceId) },
 						queryInstanceMapper);
-
+		*/
+		QtQueryInstance queryInstance = (QtQueryInstance) jdbcTemplate
+		.queryForObject(sql, new Object[] { Integer.valueOf(queryInstanceId) },
+				queryInstanceMapper);
 		return queryInstance;
 	}
 
@@ -154,6 +158,11 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 				messageUpdate = " MESSAGE = nvl(MESSAGE,'') " + concatOperator
 						+ " ? ";
 			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				concatOperator = "||";
+				messageUpdate = " MESSAGE = coalesce(MESSAGE,'') " + concatOperator
+						+ " ? ";
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
 				//concatOperator = "+";
 				// messageUpdate = " MESSAGE = isnull(Cast(MESSAGE as nvarchar(4000)),'') "
@@ -176,7 +185,8 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 					queryInstance.getBatchMode(),
 					queryInstance.getEndDate(),
 					statusTypeId,
-					 queryInstance.getQueryInstanceId() });
+					Integer.valueOf(queryInstance.getQueryInstanceId())
+					});
 				} else { 
 					//update rest of the fields
 					String sql = "UPDATE "
@@ -189,7 +199,7 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 						queryInstance.getGroupId(),
 						queryInstance.getBatchMode(),
 						statusTypeId,
-						 queryInstance.getQueryInstanceId() });
+						Integer.valueOf(queryInstance.getQueryInstanceId()) });
 				}
 				return queryInstance;
 			}
@@ -211,7 +221,7 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 				queryInstance.getEndDate(),
 				statusTypeId,
 				(queryInstance.getMessage() == null) ? "" : queryInstance
-						.getMessage(), queryInstance.getQueryInstanceId() });
+						.getMessage(), Integer.valueOf(queryInstance.getQueryInstanceId()) });
 		} else { 
 			String sql = "UPDATE "
 				+ getDbSchemaName()
@@ -224,7 +234,7 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 				queryInstance.getBatchMode(),
 				statusTypeId,
 				(queryInstance.getMessage() == null) ? "" : queryInstance
-						.getMessage(), queryInstance.getQueryInstanceId() });
+						.getMessage(), Integer.valueOf(queryInstance.getQueryInstanceId()) });
 		}
 		return queryInstance;
 	}
@@ -248,6 +258,11 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 					DAOFactoryHelper.ORACLE)) {
 				concatOperator = "||";
 				messageUpdate = " MESSAGE = nvl(MESSAGE,'') " + concatOperator
+						+ " ? ";
+			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				concatOperator = "||";
+				messageUpdate = " MESSAGE = coalesce(MESSAGE,'') " + concatOperator
 						+ " ? ";
 			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
@@ -295,18 +310,19 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 				+ getDbSchemaName()
 				+ "QT_QUERY_INSTANCE set "
 				+ messageUpdate + " where query_instance_id = ? ";
-		jdbcTemplate.update(sql, new Object[] {
-				
-				(message == null) ? "" : 
-						message, queryInstanceId });
-		
+		jdbcTemplate.update(sql, 
+				new Object[] {				
+					(message == null) ? "" : message, 
+					Integer.valueOf(queryInstanceId) });
 	}
 	
 	private static class SaveQueryInstance extends SqlUpdate {
 
 		private String INSERT_ORACLE = "";
 		private String INSERT_SQLSERVER = "";
+		private String INSERT_POSTGRES = "";
 		private String SEQUENCE_ORACLE = "";
+		private String SEQUENCE_POSTGRES = "";
 		private DataSourceLookup dataSourceLookup = null;
 
 		public SaveQueryInstance(DataSource dataSource, String dbSchemaName,
@@ -316,6 +332,19 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 			// sqlServerSequenceDao = new
 			// SQLServerSequenceDAO(dataSource,dataSourceLookup) ;
 			setDataSource(dataSource);
+			
+			if(dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				INSERT_POSTGRES = "INSERT INTO "
+					+ dbSchemaName
+					+ "QT_QUERY_INSTANCE "
+					+ "(QUERY_INSTANCE_ID, QUERY_MASTER_ID, USER_ID, GROUP_ID,BATCH_MODE,START_DATE,END_DATE,STATUS_TYPE_ID,DELETE_FLAG) "
+					+ "VALUES (?,?,?,?,?,?,?,?,?)";
+				SEQUENCE_POSTGRES = "SELECT NEXTVAL('QT_SQ_QI_QIID')"; 
+                declareParameter(new SqlParameter(Types.INTEGER));
+				return;
+			}
+			
 			if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.ORACLE)) {
 				INSERT_ORACLE = "INSERT INTO "
@@ -364,6 +393,7 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 						queryInstance.getEndDate(),
 						queryInstance.getQtQueryStatusType().getStatusTypeId(),
 						queryInstance.getDeleteFlag() };
+                update(object);
 
 			} else if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.ORACLE)) {
@@ -378,9 +408,31 @@ public class QueryInstanceSpringDao extends CRCDAO implements IQueryInstanceDao 
 						queryInstance.getEndDate(),
 						queryInstance.getQtQueryStatusType().getStatusTypeId(),
 						queryInstance.getDeleteFlag() };
+				update(object);
+			} else if(dataSourceLookup.getServerType().equalsIgnoreCase(
+					DAOFactoryHelper.POSTGRES)) {
+				queryInstanceId = jdbc.queryForInt(SEQUENCE_POSTGRES);
+				queryInstance.setQueryInstanceId(String
+						.valueOf(queryInstanceId));
+				object = new Object[] { Integer.valueOf(queryInstance.getQueryInstanceId()),
+						Integer.valueOf(queryInstance.getQtQueryMaster().getQueryMasterId()),
+						queryInstance.getUserId(), 
+						queryInstance.getGroupId(),
+						queryInstance.getBatchMode(),
+						queryInstance.getStartDate(),
+						queryInstance.getEndDate(),
+						queryInstance.getQtQueryStatusType().getStatusTypeId(),
+						queryInstance.getDeleteFlag() };
+				jdbc.update(INSERT_POSTGRES, object);
+				/*String sql = INSERT_POSTGRES + "(" + queryInstanceId + ", " + queryInstance.getQtQueryMaster().getQueryMasterId() + ", "
+					+ getSqlFormattedString(queryInstance.getUserId()) + ", "  + getSqlFormattedString(queryInstance.getGroupId()) + ", "
+					+ getSqlFormattedString(queryInstance.getBatchMode()) + ", "  + getSqlFormattedString(queryInstance.getStartDate()) + ", " 
+					+ getSqlFormattedString(queryInstance.getEndDate()) + ", " + queryInstance.getQtQueryStatusType().getStatusTypeId() + ", " 
+					+ getSqlFormattedString(queryInstance.getDeleteFlag()) 
+					+ ")";
+				jdbc.execute(sql);*/
 			}
-
-			update(object);
+		
 			if (dataSourceLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
 				int queryInstanceIdentityId = jdbc

@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.harvard.i2b2.common.exception.I2B2Exception;
 import edu.harvard.i2b2.common.util.db.JDBCUtil;
+import edu.harvard.i2b2.crc.dao.DAOFactoryHelper;
 
 /**
  * Class to build sql clause from the input, to catch sql injection attack.
@@ -147,7 +148,7 @@ public class SqlClauseUtil {
 				} else if (needPercentFlag) { 
 					formattedValue = formattedValue + "%";
 				}
-				formattedValue = "'" + formattedValue + "'";
+				formattedValue = "'" + doubleEscapeBackslash(formattedValue) + "'";
 
 			}
 		} else if (operator.toUpperCase().equals("IN")) {
@@ -208,7 +209,28 @@ public class SqlClauseUtil {
 		return formattedValue;
 	}
 	
+	// smuniraju 
+	public static String doubleEscapeBackslash(String input) {		
+		if(input == null) return input;
 	
+		if (DAOFactoryHelper.dataSourceLookup.getServerType().equalsIgnoreCase("POSTGRES")) {		
+			//Postgres treats backslash as an escape character in search expressions
+			//escape the escape characters.
+			input = input.replaceAll("\\\\", "\\\\\\\\\\\\\\\\"); 			
+		} 
+		return input;		
+	}
 	
+	// smuniraju 
+	public static String escapeBackslash(String input) {		
+		if(input == null) return input;
+		
+		if (DAOFactoryHelper.dataSourceLookup.getServerType().equalsIgnoreCase("POSTGRES")) {				
+			// Postgres treats backslash as an escape character in search expressions
+			// escape the escape characters.
+			input = input.replaceAll("\\\\", "\\\\\\\\"); 	
+		} 
+		return input;		
+	}
 
 }

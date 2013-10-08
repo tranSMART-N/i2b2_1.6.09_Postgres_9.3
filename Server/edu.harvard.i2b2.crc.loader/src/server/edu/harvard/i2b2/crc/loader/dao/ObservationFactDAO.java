@@ -119,10 +119,16 @@ public class ObservationFactDAO extends CRCLoaderDAO implements
 			boolean appendFlag) throws I2B2Exception {
 		Connection conn = null;
 		try {
+			// smuniraju: Postgres requires only IN arguments to be specified in the call to proc.
+			// CallableStatement callStmt = conn.prepareCall("{call " + this.getDbSchemaName() + "UPDATE_OBSERVATION_FACT(?,?,?,?)}");
+			String prepareCallString = "";
+			if(dataSourceLookup.getServerType().equalsIgnoreCase(DataSourceLookupDAOFactory.POSTGRES)) {
+				prepareCallString = "{call " + this.getDbSchemaName() + "UPDATE_OBSERVATION_FACT(?,?,?)}";
+			} else {
+				prepareCallString = "{call " + this.getDbSchemaName() + "UPDATE_OBSERVATION_FACT(?,?,?,?)}";
+			}
 			conn = getDataSource().getConnection();
-			CallableStatement callStmt = conn.prepareCall("{call "
-					+ this.getDbSchemaName()
-					+ "UPDATE_OBSERVATION_FACT(?,?,?,?)}");
+			CallableStatement callStmt = conn.prepareCall(prepareCallString);
 			callStmt.setString(1, tempTableName);
 			callStmt.setInt(2, uploadId);
 
@@ -164,7 +170,6 @@ public class ObservationFactDAO extends CRCLoaderDAO implements
 	public void removeTempTable(String tempTableName) throws I2B2Exception {
 		Connection conn = null;
 		try {
-
 			conn = getDataSource().getConnection();
 			CallableStatement callStmt = conn.prepareCall("{call "
 					+ this.getDbSchemaName() + "REMOVE_TEMP_TABLE(?)}");
@@ -198,9 +203,16 @@ public class ObservationFactDAO extends CRCLoaderDAO implements
 	public void createTempTable(String tempTableName) throws I2B2Exception {
 		Connection conn = null;
 		try {
+			// smuniraju: Postgres requires only IN arguments to be specified in the call to proc.
+			// CallableStatement callStmt = conn.prepareCall("{call " + this.getDbSchemaName() + "CREATE_TEMP_TABLE(?,?)}");
+			String prepareCallString = "";
+			if(dataSourceLookup.getServerType().equalsIgnoreCase(DataSourceLookupDAOFactory.POSTGRES)) {
+				prepareCallString = "{call " + this.getDbSchemaName() + "CREATE_TEMP_TABLE(?)}";
+			} else {
+				prepareCallString = "{call " + this.getDbSchemaName() + "CREATE_TEMP_TABLE(?,?)}";
+			}
 			conn = getDataSource().getConnection();
-			CallableStatement callStmt = conn.prepareCall("{call "
-					+ this.getDbSchemaName() + "CREATE_TEMP_TABLE(?,?)}");
+			CallableStatement callStmt = conn.prepareCall(prepareCallString);
 			callStmt.setString(1, tempTableName);
 			callStmt.registerOutParameter(2, java.sql.Types.VARCHAR);
 			callStmt.execute();
