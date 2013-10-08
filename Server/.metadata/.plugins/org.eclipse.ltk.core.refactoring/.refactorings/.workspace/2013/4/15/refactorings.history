@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete 9 resources" deleteContents="true" description="Delete 9 resources" element1="/edu.harvard.i2b2.common" element2="/edu.harvard.i2b2.crc" element3="/edu.harvard.i2b2.crc.loader" element4="/edu.harvard.i2b2.fr" element5="/edu.harvard.i2b2.ontology" element6="/edu.harvard.i2b2.pm" element7="/edu.harvard.i2b2.workplace" element8="/edu.harvard.i2b2.xml" element9="/webclient" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="9" stamp="1365790349911"/>
+</session>
