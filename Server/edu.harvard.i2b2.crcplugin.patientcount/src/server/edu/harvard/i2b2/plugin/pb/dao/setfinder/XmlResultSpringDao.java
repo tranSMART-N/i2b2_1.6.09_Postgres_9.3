@@ -68,10 +68,10 @@ public class XmlResultSpringDao extends CRCDAO implements IXmlResultDao {
 				+ "QT_XML_RESULT(result_instance_id,xml_value) VALUES(?,?)";
 		String POSTGRES_SQL = "INSERT INTO "
 			+ getDbSchemaName()
-			+ "QT_XML_RESULT(xml_result_id,result_instance_id,xml_value) VALUES(?,?,?)";
+			+ "QT_XML_RESULT(xml_result_id,result_instance_id,xml_value) VALUES(?,CAST( ? as numeric),?)";
 		String SEQUENCE_ORACLE = "SELECT " + dbSchemaName
 				+ "QT_SQ_QXR_XRID.nextval from dual";
-		String SEQUENCE_POSTGRES = "SELECT nextval('QT_SQ_QXR_XRID')";
+		String SEQUENCE_POSTGRES = "SELECT nextval('" + getDbSchemaName() + "QT_SQ_QXR_XRID')";
 
 		int xmlResultId = 0;
 		if (dataSourceLookup.getServerType().equalsIgnoreCase(
@@ -104,7 +104,7 @@ public class XmlResultSpringDao extends CRCDAO implements IXmlResultDao {
 	public QtXmlResult getXmlResultByResultInstanceId(String resultInstanceId)
 			throws I2B2DAOException {
 		String sql = "select *  from " + getDbSchemaName()
-				+ "qt_xml_result where result_instance_id = ?";
+				+ "qt_xml_result where result_instance_id = CAST( ? as numeric)";
 		List<QtXmlResult> queryXmlResult = jdbcTemplate.query(sql,
 				new Object[] { resultInstanceId }, xmlResultMapper);
 		if (queryXmlResult != null && queryXmlResult.size() > 0) {
