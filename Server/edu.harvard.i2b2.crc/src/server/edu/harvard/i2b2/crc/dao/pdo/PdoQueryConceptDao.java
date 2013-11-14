@@ -225,7 +225,7 @@ public class PdoQueryConceptDao extends CRCDAO implements IPdoQueryConceptDao {
 						+ selectClause
 						+ "  FROM "
 						+ getDbSchemaName()
-						+ "concept_dimension concept WHERE concept_path LIKE ? order by concept_path)  ";
+						+ "concept_dimension concept WHERE concept_path LIKE ? escape '' order by concept_path)  ";
 
 			} else if (serverType.equalsIgnoreCase(DAOFactoryHelper.SQLSERVER) || 
 					   serverType.equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
@@ -234,7 +234,7 @@ public class PdoQueryConceptDao extends CRCDAO implements IPdoQueryConceptDao {
 						+ " ROW_NUMBER() OVER (ORDER BY concept_path) AS RowNum"
 						+ "  FROM "
 						+ getDbSchemaName()
-						+ "concept_dimension concept WHERE concept_path LIKE ? order by concept_path) ";
+						+ "concept_dimension concept WHERE concept_path LIKE ? escape '' order by concept_path) ";
 
 			}
 

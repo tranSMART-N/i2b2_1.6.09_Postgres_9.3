@@ -209,16 +209,16 @@ public class BuildTempTableSql extends CRCDAO {
 		// This change may only work for postgresql version currently.
 		// To make it for all database, dataSource can be used to distinguish
 		// between different dbs
-		/*dimensionSql = conceptType.getFacttablecolumn() + " IN (select "
+		dimensionSql = conceptType.getFacttablecolumn() + " IN (select "
 				+ conceptType.getFacttablecolumn() + " from "
 				+ getDbSchemaName() + conceptType.getTablename() + "  "
 				+ noLockSqlServer + " where " + conceptType.getColumnname()
 				+ " " + conceptType.getOperator() + " "
-				+ conceptType.getDimcode() + ")";*/
+				+ conceptType.getDimcode() + ")";
 		// This modification seems like only a temporary patch to fix bugs from
 		// the different syntax between oracle and postgresql
 		 
-		 
+/*		 
 		String dimcode = conceptType.getDimcode();
 		while (dimcode.contains("\\\\") || dimcode.contains("\'")) {
 			dimcode = dimcode.replace("\\\\", "\\");
@@ -227,9 +227,11 @@ public class BuildTempTableSql extends CRCDAO {
 		dimensionSql = conceptType.getFacttablecolumn() + " IN (select "
 				+ conceptType.getFacttablecolumn() + " from "
 				+ getDbSchemaName() + conceptType.getTablename() + "  "
-				+ noLockSqlServer + " where replace(" + conceptType.getColumnname()
-				+ ", '\\', '/') " + conceptType.getOperator() + " replace(\'"
+				+ noLockSqlServer + " where translate(" + conceptType.getColumnname()
+				+ ", '\\', '/') " + conceptType.getOperator() + " translate(\'"
 				+ dimcode + "\', '\\', '/'))";
+				
+				*/
 		return dimensionSql;
 	}
 

@@ -8,7 +8,7 @@ public class DataSourceLookup {
     private String ownerId;
     private String fullSchema;
     private String dataSource;
-    private String  serverType;
+    private String serverType;
     private String niceName;
     private String toolTip;
     private String comment;

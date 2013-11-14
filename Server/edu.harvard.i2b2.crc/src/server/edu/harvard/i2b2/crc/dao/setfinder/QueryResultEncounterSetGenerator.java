@@ -94,6 +94,12 @@ public class QueryResultEncounterSetGenerator extends CRCDAO implements
 						+ "SELECT ? AS result_instance_id, ROW_NUMBER() OVER(ORDER BY patient_num) AS set_index, t.patient_num, t.encounter_num "
 						+ "FROM (" + encounterSql + ") t order by t.patient_num,t.encounter_num";
 			}
+			else if (sfDAOFactory.getDataSourceLookup().getServerType().equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
+				sql = "INSERT INTO " + dbSchemaName + "qt_patient_enc_collection"
+						+ " (patient_enc_coll_id, result_instance_id, set_index, patient_num, encounter_num) "
+						+ "SELECT nextval('QT_SQ_QPER_PECID') AS patient_set_coll_id, ? AS result_instance_id, ROW_NUMBER() OVER(ORDER BY patient_num), t.patient_num, t.encounter_num "
+						+ "FROM (" + encounterSql + ") t";
+			}
 			log.debug("Executing sql:\n" + sql);
 			LogTimingUtil logTimingUtil = new LogTimingUtil();
 			logTimingUtil.setStartTime();

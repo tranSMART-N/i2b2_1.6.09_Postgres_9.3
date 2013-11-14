@@ -119,12 +119,14 @@ public class QueryResultGenerator extends CRCDAO implements IResultGenerator {
 					+ "    ) "
 					+ " and obs_fact.concept_cd in (select concept_cd from "
 					+ this.getDbSchemaName()
-					+ "concept_dimension  where concept_path like ?)";
+					+ "concept_dimension  where concept_path like ? escape '')";
 			
 			//get break down count sigma from property file 
 			
 			double breakdownCountSigma = GaussianBoxMuller.getBreakdownCountSigma();
 			double obfuscatedMinimumValue = GaussianBoxMuller.getObfuscatedMinimumVal();
+			
+			log.debug("Executing count sql [" + itemCountSql + "]");
 			
 			ResultType resultType = new ResultType();
 			resultType.setName(resultTypeName);

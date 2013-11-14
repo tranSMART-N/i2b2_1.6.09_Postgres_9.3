@@ -210,7 +210,7 @@ public class CalulatePatientCountMainFromItemKey extends CRCDAO {
 					+ "  ) "
 					+ " and obs_fact.concept_cd in (select concept_cd from "
 					+ this.getDbSchemaName()
-					+ "concept_dimension where concept_path like ?)";
+					+ "concept_dimension where concept_path like ? escape '')";
 			ResultType resultType = new ResultType();
 			resultType.setName(RESULT_NAME);
 			conn = dataSource.getConnection();

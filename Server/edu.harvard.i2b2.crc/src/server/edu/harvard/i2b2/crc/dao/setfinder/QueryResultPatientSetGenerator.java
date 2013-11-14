@@ -72,8 +72,8 @@ public class QueryResultPatientSetGenerator extends CRCDAO implements
 						+ "FROM (SELECT DISTINCT patient_num FROM " + TEMP_DX_TABLE + ") t";
 			} else if (sfDAOFactory.getDataSourceLookup().getServerType().equalsIgnoreCase(DAOFactoryHelper.POSTGRES)) {
 				sql = "INSERT INTO " + dbSchemaName + "qt_patient_set_collection"
-						+ " (result_instance_id, set_index, patient_num) "
-						+ "SELECT ? AS result_instance_id, ROW_NUMBER() OVER(ORDER BY patient_num) AS set_index, t.patient_num "
+						+ " (patient_set_coll_id, result_instance_id, set_index, patient_num) "
+						+ "SELECT nextval('QT_SQ_QPR_PCID'), ? AS result_instance_id, ROW_NUMBER() OVER(ORDER BY patient_num) AS set_index, t.patient_num "
 						+ "FROM (SELECT DISTINCT patient_num FROM " + TEMP_DX_TABLE + ") t";
             }
 			log.debug("Executing sql:\n" + sql);

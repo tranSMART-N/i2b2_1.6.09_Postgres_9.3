@@ -148,7 +148,7 @@ public class SqlClauseUtil {
 				} else if (needPercentFlag) { 
 					formattedValue = formattedValue + "%";
 				}
-				formattedValue = "'" + doubleEscapeBackslash(formattedValue) + "'";
+				formattedValue = "'" + formattedValue + "'" + "escape ''";
 
 			}
 		} else if (operator.toUpperCase().equals("IN")) {
@@ -216,7 +216,7 @@ public class SqlClauseUtil {
 		if (DAOFactoryHelper.dataSourceLookup.getServerType().equalsIgnoreCase("POSTGRES")) {		
 			//Postgres treats backslash as an escape character in search expressions
 			//escape the escape characters.
-			input = input.replaceAll("\\\\", "\\\\\\\\\\\\\\\\"); 			
+//			input = input.replaceAll("\\\\", "\\\\\\\\\\\\\\\\"); 			
 		} 
 		return input;		
 	}
@@ -228,7 +228,7 @@ public class SqlClauseUtil {
 		if (DAOFactoryHelper.dataSourceLookup.getServerType().equalsIgnoreCase("POSTGRES")) {				
 			// Postgres treats backslash as an escape character in search expressions
 			// escape the escape characters.
-			input = input.replaceAll("\\\\", "\\\\\\\\"); 	
+//			input = input.replaceAll("\\\\", "\\\\\\\\"); 	
 		} 
 		return input;		
 	}

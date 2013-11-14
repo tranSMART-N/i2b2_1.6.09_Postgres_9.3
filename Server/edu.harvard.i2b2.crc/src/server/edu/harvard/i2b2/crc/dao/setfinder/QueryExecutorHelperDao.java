@@ -204,11 +204,11 @@ public class QueryExecutorHelperDao extends CRCDAO {
 				+ " ENCOUNTER_NUM int,  PATIENT_NUM int , INSTANCE_NUM int, MASTER_ID varchar(50), LEVEL_NO int ) ";
 				stmt.executeUpdate(createSql);
 		
-				String indexSql = "create index tempIndex on "
-							+ this.getDbSchemaName()
-							+ TEMP_TABLE + " (patient_num,panel_count)";
-				log.debug("Executing sql [ " + indexSql + " ]");
-				stmt.executeUpdate(indexSql);
+//				String indexSql = "create index tempIndex on "
+//							+ this.getDbSchemaName()
+//							+ TEMP_TABLE + " (patient_num,panel_count)";
+//				log.debug("Executing sql [ " + indexSql + " ]");
+//				stmt.executeUpdate(indexSql);
 			} else if (dsLookup.getServerType().equalsIgnoreCase(
 					DAOFactoryHelper.SQLSERVER)) {
 				String checkDeleteGlobalTempTable = "drop table " + TEMP_TABLE;

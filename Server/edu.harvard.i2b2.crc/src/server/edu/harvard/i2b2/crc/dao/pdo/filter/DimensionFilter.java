@@ -65,12 +65,14 @@ public class DimensionFilter {
 			if (dimCode != null && !(dimOperator.trim().equalsIgnoreCase("OVERLAPS"))) {
 				dimCode = JDBCUtil.escapeSingleQuote(dimCode);
 			}
-
+			
+			String escape = "";
 			if (dimOperator.equalsIgnoreCase("LIKE")
 					&& dimCode.trim().length() > 0) {
 				// check if the dim code ends with "\" other wise add it,
 				// so that it matches concept_dimension's concept_path or
 				// provider_dimension's provider_path
+				escape = " escape ''";
 				if (dimCode.lastIndexOf('\\') == dimCode.length() - 1) {
 					dimCode = dimCode + "%";
 				} else {
@@ -92,7 +94,7 @@ public class DimensionFilter {
 				if (dimColumnDataType.equalsIgnoreCase("T")) {
 					if (!SqlClauseUtil.isEnclosedinSingleQuote(dimCode)) {
 						dimCode = JDBCUtil.escapeSingleQuote(dimCode);
-						dimCode = "'" + dimCode + "'";
+						dimCode = "'" + dimCode + "'" + escape;
 					}
 				}
 			}
