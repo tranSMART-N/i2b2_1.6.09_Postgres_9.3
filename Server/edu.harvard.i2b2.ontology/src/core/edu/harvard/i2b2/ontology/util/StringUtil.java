@@ -81,14 +81,14 @@ public class StringUtil {
 		
 		if(input == null) return output;
 		
-		if (serverType.equals("POSTGRES")) {
+//		if (serverType.equals("POSTGRES")) {
 			
 			//Postgres treats backslash as an escape character in search expressions
 			//escape the escape characters.
-			output = input.replaceAll("\\\\", "\\\\\\\\"); 	
-		} else {
+//			output = input.replaceAll("\\\\", "\\\\\\\\"); 	
+//		} else {
 			output = input ; 
-		}
+//		}
 		
 		return output;		
 	}
@@ -99,14 +99,14 @@ public class StringUtil {
 		
 		if(input == null) return output;
 		
-		if (serverType.equals("POSTGRES")) {
+//		if (serverType.equals("POSTGRES")) {
 			
 			//Postgres treats backslash as an escape character in search expressions
 			//escape the escape characters.
-			output = input.replaceAll("\\\\", "\\\\\\\\\\\\\\\\");  			
-		} else {
+//			output = input.replaceAll("\\\\", "\\\\\\\\\\\\\\\\");  			
+//		} else {
 			output = input ; 
-		}
+//		}
 		
 		return output;		
 	}

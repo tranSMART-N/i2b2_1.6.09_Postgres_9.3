@@ -107,7 +107,7 @@ public class GetTermInfoDao extends JdbcDaoSupport {
 			if(termInfoType.isSynonyms() == false)
 				synonym = " and c_synonym_cd = 'N'";
 			
-			String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ? "; 
+			String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ? escape ''"; 
 			sql = sql + hidden + synonym + " order by c_name ";
 	 
 		//	log.info(sql + path + level);

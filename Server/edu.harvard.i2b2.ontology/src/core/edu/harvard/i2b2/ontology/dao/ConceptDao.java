@@ -423,7 +423,7 @@ public class ConceptDao extends JdbcDaoSupport {
 		if(childrenType.isSynonyms() == false)
 			synonym = " and c_synonym_cd = 'N'";
 		
-		String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ? and c_hlevel = ? "; 
+		String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ? escape '' and c_hlevel = ? "; 
 		sql = sql + hidden + synonym + " order by c_name ";
  
 		//log.info(sql + " " + path + " " + level);
@@ -591,7 +591,7 @@ public class ConceptDao extends JdbcDaoSupport {
 		if(termInfoType.isSynonyms() == false)
 			synonym = " and c_synonym_cd = 'N'";
 		
-		String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ?  "; 
+		String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ? escape '' "; 
 		sql = sql + hidden + synonym + " order by c_name ";
  
 		//log.info(sql + " " + path + " " + level);
@@ -704,13 +704,13 @@ public class ConceptDao extends JdbcDaoSupport {
 			
 			// dont do the sql injection replace; it breaks the service.
 		    if(vocabType.getMatchStr().getStrategy().equals("exact")) {
-		    	nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() + " where upper(c_name) = ? and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) + "%'";
+		    	nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() + " where upper(c_name) = ? and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) + "%' escape ''";
 		    	compareName = value.toUpperCase();
 		    	
 		    }
 		    
 		    else if(vocabType.getMatchStr().getStrategy().equals("left")){
-		    	nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() + " where upper(c_name) = ? and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%'";
+		    	nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() + " where upper(c_name) = ? and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%' escape ''";
 		    	compareName = vocabType.getMatchStr().getValue().toUpperCase() + "%";
 		    	if(dbInfo.getDb_serverType().toUpperCase().equals("SQLSERVER")){
 					compareName = compareName.replaceAll("\\[", "[[]");
@@ -718,7 +718,7 @@ public class ConceptDao extends JdbcDaoSupport {
 		    }
 		    
 		    else if(vocabType.getMatchStr().getStrategy().equals("right")) {
-		    	nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() +" where upper(c_name) like ?  and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%'";
+		    	nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() +" where upper(c_name) like ?  and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%' escape ''";
 		    	compareName =  "%" + vocabType.getMatchStr().getValue().toUpperCase();
 		    	if(dbInfo.getDb_serverType().toUpperCase().equals("SQLSERVER")){
 					compareName = compareName.replaceAll("\\[", "[[]");
@@ -727,7 +727,7 @@ public class ConceptDao extends JdbcDaoSupport {
 		    
 		    else if(vocabType.getMatchStr().getStrategy().equals("contains")) {
 		    	if(!(value.contains(" "))){
-		    		nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() +" where upper(c_name) like ?  and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%'";
+		    		nameInfoSql = "select " + parameters  + " from " + metadataSchema+categoryResult.get(0).getTablename() +" where upper(c_name) like ?  and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%' escape ''";
 		    		compareName =  "%" +	value.toUpperCase() + "%";
 		    		if(dbInfo.getDb_serverType().toUpperCase().equals("SQLSERVER")){
 						compareName = compareName.replaceAll("\\[", "[[]");
@@ -737,7 +737,7 @@ public class ConceptDao extends JdbcDaoSupport {
 		    		if(dbInfo.getDb_serverType().toUpperCase().equals("SQLSERVER")){
 						value = value.replaceAll("\\[", "[[]");
 					}
-		    		nameInfoSql = nameInfoSql + parseMatchString(value)+ " and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%'";;
+		    		nameInfoSql = nameInfoSql + parseMatchString(value)+ " and c_fullname like '" + StringUtil.doubleEscapeBackslash(category, dbInfo.getDb_serverType()) +"%' escape ''";;
 		    		compareName = null;
 		    	}
 		    }
@@ -1520,7 +1520,7 @@ public class ConceptDao extends JdbcDaoSupport {
 			modifier_select = modifier_select + ", '" + appliedConcept + "'";
 		}
 
-		String sql = "select " + parameters + " from "+ metadataSchema+ tableName + " where m_exclusion_cd is null and c_hlevel = ? and c_fullname like ? " 
+		String sql = "select " + parameters + " from "+ metadataSchema+ tableName + " where m_exclusion_cd is null and c_hlevel = ? and c_fullname like ? escape ''" 
 		+ modifier_select +") and c_fullname in (";
 	
 

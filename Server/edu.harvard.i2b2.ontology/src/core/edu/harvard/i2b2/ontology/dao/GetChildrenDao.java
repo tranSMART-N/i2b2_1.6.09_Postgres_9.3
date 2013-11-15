@@ -101,7 +101,7 @@ public class GetChildrenDao extends JdbcDaoSupport {
 		
 // Lookup to get chlevel + 1 ---  dont allow synonyms so we only get one result back
 				
-		String levelSql = "select c_hlevel from " + metadataSchema+tableName  + " where c_fullname like ?  and c_synonym_cd = 'N'";
+		String levelSql = "select c_hlevel from " + metadataSchema+tableName  + " where c_fullname like ?  escape '' and c_synonym_cd = 'N'";
 
 	    int level = 0;
 		try {
@@ -120,7 +120,7 @@ public class GetChildrenDao extends JdbcDaoSupport {
 		if(childrenType.isSynonyms() == false)
 			synonym = " and c_synonym_cd = 'N'";
 		
-		String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ? and c_hlevel = ? "; 
+		String sql = "select " + parameters +" from " + metadataSchema+tableName  + " where c_fullname like ?  escape '' and c_hlevel = ? "; 
 		sql = sql + hidden + synonym + " order by c_name ";
  
 		//	log.info(sql + path + level);
