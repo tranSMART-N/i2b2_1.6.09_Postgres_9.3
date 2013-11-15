@@ -298,6 +298,7 @@ $Id: build.xml,v 1.46 2009/10/23 19:57:58 rk903 Exp $
 				<exclude name="**/jboss.xml" />
 				<exclude name="**/crc-oracle-jdbc2-service.xml" />
 				<exclude name="**/crc-mssql-jdbc2-service.xml" />
+				<exclude name="**/crc-netezza-jdbc2-service.xml" />
 			</fileset>
 		</copy>
 
